@@ -1,0 +1,56 @@
+{
+ "cape_ann": {
+  "exact": 0.6453051222487989,
+  "group": 0.9859367352987806,
+  "share_in_training_blocks": 1.0,
+  "exact_training_blocks": 0.6453051222487989,
+  "group_training_blocks": 0.9859367352987806,
+  "exact_other_blocks": null,
+  "group_other_blocks": null,
+  "pred_share": {
+   "M-sM": 0.0,
+   "mS": 0.177,
+   "S": 0.486,
+   "gS": 0.329,
+   "sG": 0.0,
+   "G": 0.0,
+   "R": 0.008
+  },
+  "label_share": {
+   "M-sM": 0.0,
+   "mS": 0.0,
+   "S": 0.375,
+   "gS": 0.614,
+   "sG": 0.0,
+   "G": 0.0,
+   "R": 0.011
+  }
+ },
+ "boston_harbor": {
+  "exact": 0.5512404370351615,
+  "group": 0.7257418735705943,
+  "share_in_training_blocks": 0.9829489021562716,
+  "exact_training_blocks": 0.5608027394159741,
+  "group_training_blocks": 0.7233380673772385,
+  "exact_other_blocks": 0.0,
+  "group_other_blocks": 0.864314690430272,
+  "pred_share": {
+   "M-sM": 0.044,
+   "mS": 0.0,
+   "S": 0.101,
+   "gS": 0.131,
+   "sG": 0.0,
+   "G": 0.034,
+   "R": 0.69
+  },
+  "label_share": {
+   "M-sM": 0.0,
+   "mS": 0.332,
+   "S": 0.0,
+   "gS": 0.0,
+   "sG": 0.028,
+   "G": 0.007,
+   "R": 0.633
+  }
+ }
+}

@@ -19,6 +19,35 @@ Before BenthiCat was added, the model scored 9 % right group on those BenthiCat 
 do not expect it to work unaided on a survey unlike both training sets. Check the output
 against ground truth, and if you have any labels of your own, fine-tune (see below).
 
+## Example results
+
+All three figures use the default weights.
+
+**Two USGS scenes outside the training data** (3 × 3 km each): the sonar mosaic, the USGS
+sediment map used as the reference, and the model's output.
+
+![Sonar mosaic, USGS reference map and model output for a Cape Ann scene and a Boston Harbor scene](reports/sample_result_joint.png)
+
+In the Cape Ann scene the model agrees with the map on 65 % of pixels at exact-class level and
+99 % at mud / sand / gravel / rock level. In the Boston Harbor scene it is 55 % and 73 %: rock
+is found, but the muddy sand in the middle is called sand, gravelly sand or mud. Both scenes
+score above their surveys' averages (63 % / 92 % for Cape Ann, 34 % / 51 % for Boston Harbor).
+The Cape Ann survey was used to choose the checkpoint, though never trained on; Boston Harbor
+was used for neither.
+
+**BenthiCat tiles from a sector never trained on** (Catalonia), shown at group level: sonar,
+habitat-map reference, the USGS-only weights, and the default weights.
+
+![BenthiCat tiles: sonar, habitat map, USGS-only model calling everything gravel, and the default model](reports/benthicat_sample.png)
+
+The USGS-only weights call nearly everything gravel. The default weights get 73 to 93 % of
+each of these tiles right; the average over the two test sectors is 72 %.
+
+**What `predict.py` writes:** the input beside a colour overlay with its legend (Cape Ann
+scene).
+
+![predict.py overlay output for the Cape Ann scene](reports/demo_cape_ann_crop_overlay.jpg)
+
 ## Quick start
 
 ```bash
@@ -166,7 +195,9 @@ Per-class IoU:
 | Test blocks | 0.46 | 0.27 | 0.42 | 0.27 | 0.41 | 0.05 | 0.44 |
 | Both unseen surveys | 0.06 | 0.05 | 0.22 | 0.28 | 0.15 | 0.03 | 0.58 |
 
-What the confusion matrices (`reports/confusion.png`) show:
+![Confusion matrices of the USGS-only weights on held-out blocks and on the two unseen surveys](reports/confusion.png)
+
+What the confusion matrices show:
 
 - Inside the training surveys, mistakes are mostly between neighbours: 44 % of mud pixels
   are called muddy sand, a quarter of sand is called gravelly sand, 40 % of gravel is called
@@ -216,9 +247,14 @@ SegFormer-B0 runs about twice as many training steps per minute on CPU, which is
 it. This is a result about a 16-minute CPU budget, not about which architecture is better
 with proper training; on a GPU, rerun the comparison.
 
-Example predictions on held-out tiles are in `reports/examples.png`. `reports/sample_result.png`
-shows two 3 × 3 km scenes from the unseen surveys next to the USGS map, and
-`reports/demo_*_overlay.jpg` are the same scenes as `predict.py` writes them.
+Example predictions of the USGS-only weights on held-out tiles, two per survey (mosaic, map
+label, model):
+
+![Held-out tiles from each survey: mosaic, USGS map label and USGS-only model output](reports/examples.png)
+
+The same two 3 × 3 km scenes as under Example results, with the USGS-only weights:
+
+![USGS-only weights on the Cape Ann and Boston Harbor scenes](reports/sample_result.png)
 
 ### Longer training: better at home, worse on new surveys
 
@@ -288,8 +324,10 @@ seven surveys they score 0.54 exact and 0.72 right group, ranging from 0.77 / 0.
 to 0.28 / 0.39 on Boston Harbor (`reports/metrics_all7.json`). Use them for imagery from
 these seven surveys. They were not made the default for a new survey: no unseen survey is left
 to test the all-seven weights on, and every continued-training run above lowered right-group
-accuracy on the surveys it had not seen. `reports/sample_result_all7.png` shows the two sample
-scenes with these weights; both scenes are now training data, so it is not a test.
+accuracy on the surveys it had not seen. The figure shows the two sample scenes with these
+weights; both scenes are now training data, so it is not a test.
+
+![All-seven weights on the two sample scenes, which they were trained on](reports/sample_result_all7.png)
 
 ### Adapting to a new survey without labels
 
@@ -311,8 +349,7 @@ starting from the default weights. Scores are exact class / right group over eac
   already learned. And it needs statistics from the whole survey: computed from one 3 × 3 km
   scene alone it did nothing for Cape Ann and cost Boston Harbor 6 points of exact accuracy.
   On the two sample scenes with whole-survey statistics the effect was small: Cape Ann
-  0.69 → 0.73 exact, Boston Harbor 0.52 → 0.51 exact and 0.68 → 0.71 group
-  (`reports/sample_result_matched.png`).
+  0.69 → 0.73 exact, Boston Harbor 0.52 → 0.51 exact and 0.68 → 0.71 group (figure below).
 - **Weight averaging** kept unseen-survey accuracy about where the default has it and raised
   the training surveys' test blocks by about 3 points. That is a gain for the surveys already
   covered, where the all-seven weights are the better choice anyway, so no averaged file ships.
@@ -320,6 +357,8 @@ starting from the default weights. Scores are exact class / right group over eac
   pixels it is confident about. It drifted toward the classes it already favoured: per-class
   accuracy fell on both surveys (mIoU 0.20 → 0.16 overall), and right-group accuracy fell on
   both. With a starting model this weak, its confident guesses are too often wrong.
+
+![USGS-only weights with whole-survey grey-level matching on the two sample scenes](reports/sample_result_matched.png)
 
 Ten variants have now been compared on the same two unseen surveys, so the best of these
 numbers flatters whichever method it belongs to. Treat grey-level matching as worth trying on
@@ -362,10 +401,14 @@ out of training (Cape Ann and sector N08), and scored once on data used for neit
 | Cape Ann (used to choose the checkpoint), exact / right group | 0.43 / 0.95 | 0.63 / 0.92 |
 
 On the BenthiCat test sectors the joint model finds rock 91 % of the time, mud 76 % and sand
-65 % (`reports/benthicat_sample.png`). Boston Harbor is 5 points lower than with the USGS-only
+65 % (figure under Example results). Boston Harbor is 5 points lower than with the USGS-only
 weights, which is inside the 5 to 15 point swing seen between runs on that survey, so it is
 neither a gain nor a clear loss. The joint weights are the default because they are the only
 ones that work on both kinds of mosaic.
+
+Confusion matrices of the joint weights on the USGS tiles:
+
+![Confusion matrices of the joint weights on USGS held-out blocks and unseen surveys](reports/confusion_joint.png)
 
 What this does not show: seven-class accuracy on BenthiCat-like imagery (its labels cannot
 test that), or performance on a third kind of survey. BenthiCat's seagrass, maerl and
