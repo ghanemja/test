@@ -53,24 +53,36 @@ def figures(model, X, Y, meta, out_dir, metrics):
     lut = np.zeros((256, 3), np.uint8); lut[255] = 255
     for i, c in enumerate(COLORS):
         lut[i] = c
+    from seabedseg.classes import CLASS_TO_GROUP, NAMES
+    group = np.array(CLASS_TO_GROUP + [0] * (256 - NUM_CLASSES))
+    short = {"capeann": "Cape Ann", "vineyard_sound": "Vineyard Sound", "buzzards": "Buzzards Bay", "n_cape_cod": "N Cape Cod Bay",
+             "duxbury": "Duxbury-Hull", "boston": "Boston Harbor", "vineyard_nantucket": "Vineyard/Nantucket"}
     rng = np.random.default_rng(5)
     picks = []
-    for sv in meta.survey_name.unique():
+    for sv in meta.survey_name.unique():                # one held-out tile per survey, chosen from the labels only
         sub = meta[(meta.survey_name == sv) & meta.split.isin(["test", "unseen"])].index.values
-        cand = [i for i in rng.permutation(sub)[:80] if len(set(np.unique(Y[i])) - {255}) >= 2][:2]
+        cand = [i for i in rng.permutation(sub)[:80] if len(set(np.unique(Y[i])) - {255}) >= 2][:1]
         picks += [(sv, i) for i in cand]
-    fig, ax = plt.subplots(3, len(picks), figsize=(1.9 * len(picks), 6.4))
+    fig, ax = plt.subplots(3, len(picks), figsize=(2.05 * len(picks), 7.0), squeeze=False)
     for k, (sv, i) in enumerate(picks):
         with torch.no_grad():
             p, _ = engine.predict_batch(model, engine.to_tensor(np.asarray(X[i])).to(next(model.parameters()).device))
-        pred = p.argmax(1)[0].cpu().numpy().astype(np.uint8); pred[np.asarray(Y[i]) == IGNORE] = 255
-        for r, im in enumerate([np.asarray(X[i]), lut[np.asarray(Y[i])], lut[pred]]):
+        y = np.asarray(Y[i]); ok = y != IGNORE
+        pred = p.argmax(1)[0].cpu().numpy().astype(np.uint8)
+        exact = float((pred[ok] == y[ok]).mean()); grp = float((group[pred[ok]] == group[y[ok]]).mean())
+        pred[~ok] = 255
+        for r, im in enumerate([np.asarray(X[i]), lut[y], lut[pred]]):
             ax[r, k].imshow(im, cmap="gray", vmin=0, vmax=255); ax[r, k].set_xticks([]); ax[r, k].set_yticks([])
-        ax[0, k].set_title(sv.split("_ofr")[0].replace("_", " ")[:22] + ("\n(unseen survey)" if meta.split[i] == "unseen" else "\n(test block)"), fontsize=6.5)
-    for r, t in enumerate(["side-scan mosaic (1 m)", "USGS map label", "model"]):
-        ax[r, 0].set_ylabel(t, fontsize=8)
-    fig.legend(handles=[Patch(color=np.array(c) / 255, label=a) for a, c in zip(ABBR, COLORS)], loc="lower center", ncol=NUM_CLASSES, fontsize=8, frameon=False)
-    fig.tight_layout(rect=(0, 0.04, 1, 1)); fig.savefig(os.path.join(out_dir, "examples.png"), dpi=130); plt.close(fig)
+            for s in ax[r, k].spines.values():
+                s.set_color("#999999")
+        name = next((v for key, v in short.items() if sv.startswith(key)), sv.split("_ofr")[0].replace("_", " ")[:22])
+        ax[0, k].set_title(name + ("\nsurvey not trained on" if meta.split[i] == "unseen" else "\nheld-out block"), fontsize=8.5)
+        ax[2, k].set_xlabel(f"exact class {exact:.0%}\nright group {grp:.0%}", fontsize=8.5)
+    for r, t_ in enumerate(["Side-scan mosaic\n(384 m tile, 1 m pixels)", "USGS map (reference)", "Model output"]):
+        ax[r, 0].set_ylabel(t_, fontsize=9)
+    fig.legend(handles=[Patch(facecolor=np.array(c) / 255, edgecolor="#666666", label=f"{a_}  {n.split(' (')[0]}") for a_, n, c in zip(ABBR, NAMES, COLORS)],
+               loc="lower center", ncol=4, fontsize=8.5, frameon=False)
+    fig.tight_layout(rect=(0, 0.08, 1, 1)); fig.savefig(os.path.join(out_dir, "examples.png"), dpi=150, facecolor="white"); plt.close(fig)
 
     panels = [(k, tt) for k, tt in (("test", "Held-out blocks of the training surveys"), ("unseen", "Surveys never seen in training")) if k in metrics]
     fig, ax = plt.subplots(1, len(panels), figsize=(5.25 * len(panels), 4.6), squeeze=False)

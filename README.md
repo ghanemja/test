@@ -17,36 +17,48 @@ Massachusetts and five sectors of the BenthiCat data set from Catalonia, about 7
 
 Before BenthiCat was added, the model scored 9 % right group on those BenthiCat sectors, so
 do not expect it to work unaided on a survey unlike both training sets. Check the output
-against ground truth, and if you have any labels of your own, fine-tune (see below).
+against ground truth, and if you have any labels of your own, fine-tune (see below). Failure
+cases are shown under [Limitations and failure cases](#limitations-and-failure-cases) at the end.
 
 ## Example results
 
-All three figures use the default weights.
+All figures here use the default weights. Each shows the sonar image, then the reference map
+(the answer the model is scored against), then the model's output, with two scores under
+every output:
 
-**Two USGS scenes outside the training data** (3 × 3 km each): the sonar mosaic, the USGS
-sediment map used as the reference, and the model's output.
+- **exact class**: share of the labelled pixels given exactly the right one of 7 classes
+- **right group**: share put in the right one of mud, sand (muddy sand, sand, gravelly sand),
+  gravel (sandy gravel, gravel) and rock
 
-![Sonar mosaic, USGS reference map and model output for a Cape Ann scene and a Boston Harbor scene](reports/sample_result_joint.png)
+These are examples of the model working. Its failures are shown under
+[Limitations and failure cases](#limitations-and-failure-cases) at the end, and the averages
+over all held-out data are in the table at the top.
 
-In the Cape Ann scene the model agrees with the map on 65 % of pixels at exact-class level and
-99 % at mud / sand / gravel / rock level. In the Boston Harbor scene it is 55 % and 73 %: rock
-is found, but the muddy sand in the middle is called sand, gravelly sand or mud. Both scenes
-score above their surveys' averages (63 % / 92 % for Cape Ann, 34 % / 51 % for Boston Harbor).
-The Cape Ann survey was used to choose the checkpoint, though never trained on; Boston Harbor
-was used for neither.
+### Where it does well
 
-**BenthiCat tiles from a sector never trained on** (Catalonia), shown at group level: sonar,
-habitat-map reference, the USGS-only weights, and the default weights.
+![Four 384 m tiles the model did not train on, from Cape Ann, Boston Harbor, Cape Cod Bay and Buzzards Bay, with sonar, reference map, model output and accuracy](reports/examples_good.png)
 
-![BenthiCat tiles: sonar, habitat map, USGS-only model calling everything gravel, and the default model](reports/benthicat_sample.png)
+How these were chosen: for each survey, 60 held-out tiles with at least two classes were
+scored, and the tile at the 80th percentile of exact-class accuracy is shown, so four tiles in
+five score lower than these. Cape Ann and Boston Harbor are surveys kept out of training; the
+other two tiles come from held-out blocks of training surveys.
 
-The USGS-only weights call nearly everything gravel. The default weights get 73 to 93 % of
-each of these tiles right; the average over the two test sectors is 72 %.
+### Two larger scenes, 3 × 3 km
 
-**What `predict.py` writes:** the input beside a colour overlay with its legend (Cape Ann
-scene).
+![Cape Ann scene and Boston Harbor scene: sonar, USGS reference map and model output with accuracy](reports/sample_result_joint.png)
 
-![predict.py overlay output for the Cape Ann scene](reports/demo_cape_ann_crop_overlay.jpg)
+Neither survey was trained on. Both scenes score above their surveys' averages (Cape Ann
+63 % exact class and 92 % right group, Boston Harbor 34 % and 51 %), and the Cape Ann survey
+was used to choose which checkpoint to keep.
+
+### A second region: BenthiCat, Catalonia
+
+Tiles from a sector never trained on. BenthiCat's reference map only gives broad groups, so
+only right-group accuracy can be shown.
+
+![Four BenthiCat tiles from an unseen sector: sonar, habitat-map reference and model output with right-group accuracy](reports/benthicat_default.png)
+
+The average over the two BenthiCat test sectors is 72 %; these four tiles score 76 to 89 %.
 
 ## Quick start
 
@@ -64,7 +76,13 @@ python scripts/predict.py waterfall_images/ --pixel-size 0.25 --out predictions
 
 For each input the script writes a class raster (`_classes.tif`, georeferenced if the input
 is), a colour overlay with legend (`_overlay.jpg`), a bedform probability map
-(`_bedforms.png`) and a JSON summary of class shares. Overlapping windows are blended so the
+(`_bedforms.png`) and a JSON summary of class shares. The overlay for the Cape Ann scene above
+(65 % exact class, 99 % right group) looks like this; its colours are blended with the sonar
+image, so they are darker than the legend:
+
+![predict.py overlay output for the Cape Ann scene](reports/demo_cape_ann_crop_overlay.jpg)
+
+Overlapping windows are blended so the
 map has no square seams; rasters over 60 megapixels fall back to unblended stitching to save
 memory (`--blend-max-mpx`).
 
@@ -195,9 +213,7 @@ Per-class IoU:
 | Test blocks | 0.46 | 0.27 | 0.42 | 0.27 | 0.41 | 0.05 | 0.44 |
 | Both unseen surveys | 0.06 | 0.05 | 0.22 | 0.28 | 0.15 | 0.03 | 0.58 |
 
-![Confusion matrices of the USGS-only weights on held-out blocks and on the two unseen surveys](reports/confusion.png)
-
-What the confusion matrices show:
+What the confusion matrices (`reports/confusion.png`) show:
 
 - Inside the training surveys, mistakes are mostly between neighbours: 44 % of mud pixels
   are called muddy sand, a quarter of sand is called gravelly sand, 40 % of gravel is called
@@ -247,14 +263,9 @@ SegFormer-B0 runs about twice as many training steps per minute on CPU, which is
 it. This is a result about a 16-minute CPU budget, not about which architecture is better
 with proper training; on a GPU, rerun the comparison.
 
-Example predictions of the USGS-only weights on held-out tiles, two per survey (mosaic, map
-label, model):
-
-![Held-out tiles from each survey: mosaic, USGS map label and USGS-only model output](reports/examples.png)
-
-The same two 3 × 3 km scenes as under Example results, with the USGS-only weights:
-
-![USGS-only weights on the Cape Ann and Boston Harbor scenes](reports/sample_result.png)
+The two 3 × 3 km scenes under Example results, scored with the USGS-only weights, are in
+`reports/sample_result.png` (Cape Ann 69 % exact class and 98 % right group; Boston Harbor
+52 % and 68 %).
 
 ### Longer training: better at home, worse on new surveys
 
@@ -324,10 +335,9 @@ seven surveys they score 0.54 exact and 0.72 right group, ranging from 0.77 / 0.
 to 0.28 / 0.39 on Boston Harbor (`reports/metrics_all7.json`). Use them for imagery from
 these seven surveys. They were not made the default for a new survey: no unseen survey is left
 to test the all-seven weights on, and every continued-training run above lowered right-group
-accuracy on the surveys it had not seen. The figure shows the two sample scenes with these
-weights; both scenes are now training data, so it is not a test.
-
-![All-seven weights on the two sample scenes, which they were trained on](reports/sample_result_all7.png)
+accuracy on the surveys it had not seen. `reports/sample_result_all7.png` shows the two sample
+scenes with these weights (Cape Ann 85 % exact class and 98 % right group, Boston Harbor 61 %
+and 73 %); both scenes are now training data, so it is not a test.
 
 ### Adapting to a new survey without labels
 
@@ -349,7 +359,8 @@ starting from the default weights. Scores are exact class / right group over eac
   already learned. And it needs statistics from the whole survey: computed from one 3 × 3 km
   scene alone it did nothing for Cape Ann and cost Boston Harbor 6 points of exact accuracy.
   On the two sample scenes with whole-survey statistics the effect was small: Cape Ann
-  0.69 → 0.73 exact, Boston Harbor 0.52 → 0.51 exact and 0.68 → 0.71 group (figure below).
+  0.69 → 0.73 exact, Boston Harbor 0.52 → 0.51 exact and 0.68 → 0.71 group
+  (`reports/sample_result_matched.png`).
 - **Weight averaging** kept unseen-survey accuracy about where the default has it and raised
   the training surveys' test blocks by about 3 points. That is a gain for the surveys already
   covered, where the all-seven weights are the better choice anyway, so no averaged file ships.
@@ -357,8 +368,6 @@ starting from the default weights. Scores are exact class / right group over eac
   pixels it is confident about. It drifted toward the classes it already favoured: per-class
   accuracy fell on both surveys (mIoU 0.20 → 0.16 overall), and right-group accuracy fell on
   both. With a starting model this weak, its confident guesses are too often wrong.
-
-![USGS-only weights with whole-survey grey-level matching on the two sample scenes](reports/sample_result_matched.png)
 
 Ten variants have now been compared on the same two unseen surveys, so the best of these
 numbers flatters whichever method it belongs to. Treat grey-level matching as worth trying on
@@ -401,34 +410,21 @@ out of training (Cape Ann and sector N08), and scored once on data used for neit
 | Cape Ann (used to choose the checkpoint), exact / right group | 0.43 / 0.95 | 0.63 / 0.92 |
 
 On the BenthiCat test sectors the joint model finds rock 91 % of the time, mud 76 % and sand
-65 % (figure under Example results). Boston Harbor is 5 points lower than with the USGS-only
+65 %. Boston Harbor is 5 points lower than with the USGS-only
 weights, which is inside the 5 to 15 point swing seen between runs on that survey, so it is
 neither a gain nor a clear loss. The joint weights are the default because they are the only
 ones that work on both kinds of mosaic.
 
-Confusion matrices of the joint weights on the USGS tiles:
+The same four tiles as under Example results, with the earlier USGS-only weights in the third
+row for comparison and the current default weights in the fourth:
 
-![Confusion matrices of the joint weights on USGS held-out blocks and unseen surveys](reports/confusion_joint.png)
+![Comparison on four BenthiCat tiles: the earlier USGS-only weights score 0 to 1 percent right group, the current weights 76 to 89 percent](reports/benthicat_sample.png)
+
+Confusion matrices of the joint weights on the USGS tiles are in `reports/confusion_joint.png`.
 
 What this does not show: seven-class accuracy on BenthiCat-like imagery (its labels cannot
 test that), or performance on a third kind of survey. BenthiCat's seagrass, maerl and
 detritic bottoms are unlabelled in training, so the model will call them something else.
-
-## Limits you should know about
-
-- **Mosaics, not raw waterfalls.** Training imagery is slant-range corrected, gain-normalised
-  and mosaicked at 1 m. Raw waterfall images (water column, uncorrected slant range, strong
-  across-track gain) have not been tested. Correct and mask them first, or expect poor output.
-- **One region.** Everything comes from glaciated inner-shelf Massachusetts. Carbonate sand,
-  seagrass, reefs or deep-water mud elsewhere are outside what the model has seen.
-- **Map-scale labels.** Polygons are meant for use at 1:25,000, so boundaries are generalised
-  and small outcrops inside a "sand" polygon count as errors when the model finds them.
-- **Tone is relative.** Mosaics are not calibrated; each image is stretched between its 1st
-  and 99th percentile. A scene that is all one substrate has nothing to be relative to and is
-  the most likely to be mislabelled.
-- **Two families of training data.** Five USGS surveys (four sharing one sonar and one
-  processing chain) and BenthiCat. A survey processed differently from both may fail the way
-  BenthiCat did before it was added.
 
 ## Fine-tuning on your own survey
 
@@ -536,3 +532,40 @@ reads those map unit names if you want to add them.
 | `seabedseg/valentine.py` | the report's classification rules and substrate-name parser |
 | `seabedseg/classes.py` | model classes and the map-unit crosswalk |
 | `reports/` | metrics, confusion matrices, example predictions; `*_longer` and `*_all7` files belong to those weights |
+
+## Limitations and failure cases
+
+The examples at the top show the model working. This is where it does not.
+
+![Four 384 m tiles where the model fails, from Cape Ann, Boston Harbor, Cape Cod Bay and Buzzards Bay, with sonar, reference map, model output and accuracy](reports/examples_failures.png)
+
+These are the tiles at the 10th percentile of exact-class accuracy among the same 60 scored
+tiles per survey, so about one tile in ten is this bad or worse. What goes wrong in them:
+
+- **Neighbouring sand classes swapped** (Cape Ann, Cape Cod Bay): the map says gravelly sand
+  and the model says sand or muddy sand. The exact class is wrong on nearly every pixel while
+  the group is right. These classes differ by mud and gravel content that the sonar image
+  shows only weakly.
+- **One class painted over a mixed tile** (Boston Harbor, Buzzards Bay): the model calls the
+  whole Boston Harbor tile sandy gravel where the map has gravel, rock and gravelly sand, and
+  the whole Buzzards Bay tile sand where the map has mud, muddy sand and rock. Mud read as
+  sand is the costliest of these, because it is the wrong group.
+
+Averages over all held-out data, default weights: 58 % exact class and 75 % right group on the
+training surveys' held-out blocks; 34 % and 51 % on Boston Harbor; 72 % right group on the
+BenthiCat test sectors. Gravel (G) is not learned at all (IoU under 0.05).
+
+- **Mosaics, not raw waterfalls.** Training imagery is slant-range corrected, gain-normalised
+  and mosaicked at 1 m. Raw waterfall images (water column, uncorrected slant range, strong
+  across-track gain) have not been tested. Correct and mask them first, or expect poor output.
+- **Two regions.** Training data comes from the glaciated inner shelf of Massachusetts and the
+  Catalan coast. Carbonate sand, reefs or deep-water mud elsewhere are outside what the model
+  has seen, and seagrass was left unlabelled.
+- **Map-scale labels.** Polygons are meant for use at 1:25,000, so boundaries are generalised
+  and small outcrops inside a "sand" polygon count as errors when the model finds them.
+- **Tone is relative.** Mosaics are not calibrated; each image is stretched between its 1st
+  and 99th percentile. A scene that is all one substrate has nothing to be relative to and is
+  the most likely to be mislabelled.
+- **Two families of training data.** Five USGS surveys (four sharing one sonar and one
+  processing chain) and BenthiCat. A survey processed differently from both may fail the way
+  BenthiCat did before it was added.

@@ -1,0 +1,70 @@
+{
+ "good": {
+  "Cape Ann": [
+   0.85,
+   1.0
+  ],
+  "Boston Harbor": [
+   0.59,
+   0.59
+  ],
+  "Cape Cod Bay": [
+   0.8,
+   0.98
+  ],
+  "Buzzards Bay": [
+   0.75,
+   0.9
+  ]
+ },
+ "failures": {
+  "Cape Ann": [
+   0.13,
+   1.0
+  ],
+  "Boston Harbor": [
+   0.0,
+   0.52
+  ],
+  "Cape Cod Bay": [
+   0.05,
+   1.0
+  ],
+  "Buzzards Bay": [
+   0.0,
+   0.38
+  ]
+ },
+ "scenes": {
+  "Cape Ann": [
+   0.645,
+   0.986
+  ],
+  "Boston Harbor": [
+   0.551,
+   0.726
+  ]
+ },
+ "benthicat_default": {
+  "default": [
+   0.89,
+   0.87,
+   0.76,
+   0.86
+  ]
+ },
+ "benthicat_compare": {
+  "earlier": [
+   0.0,
+   0.01,
+   0.0,
+   0.0
+  ],
+  "default": [
+   0.89,
+   0.87,
+   0.76,
+   0.86
+  ]
+ }
+}
