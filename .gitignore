@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+# downloaded and derived data (rebuild with scripts/download_data.sh, build_dataset.py, benthicat_prepare.py)
+data/raw/
+data/tiles/
+data/benthicat/
+# training runs, predictions and packaged copies
+runs/
+predictions/
+dist/

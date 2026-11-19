@@ -1,0 +1,61 @@
+{
+ "texture_maps": {
+  "nahant_ccb_ofr2012_1157": "data/raw/tex_ofr2012_1157/Nahant_CCB_sedcover.shp",
+  "buzzards_ofr2014_1220": "data/raw/tex_ofr2014_1220/SedimentTexture/BuzzardsBay_sedcover.shp",
+  "vineyard_ofr2016_1119": "data/raw/tex_ofr2016_1119/VineyardNantucketSound_sedcover.shp",
+  "nahant_nh_ofr2015_1153": "data/raw/tex_ofr2015_1153/Nahant_NH_sedcover.shp"
+ },
+ "surveys": [
+  {
+   "name": "capeann_salisbury_klein3000_ofr2007_1373",
+   "tif": "data/raw/ofr2007_1373_klein/klein_bs1m.tif",
+   "nodata": [
+    0
+   ],
+   "unseen": true
+  },
+  {
+   "name": "vineyard_sound_klein3000_ofr2012_1006",
+   "tif": "data/raw/ofr2012_1006_vs/VS_Backscatter_1m.tif",
+   "nodata": [
+    0
+   ]
+  },
+  {
+   "name": "buzzards_bay_klein3000_ofr2012_1002",
+   "tif": "data/raw/ofr2012_1002_bb/BB_backscatter1m.tif",
+   "nodata": [
+    255
+   ]
+  },
+  {
+   "name": "n_cape_cod_bay_klein3000_ofr2010_1006",
+   "tif": "data/raw/ofr2010_1006_klein/CCB_Klein_bs_1m.tif",
+   "nodata": [
+    255
+   ]
+  },
+  {
+   "name": "duxbury_hull_klein3000_ofr2009_1072",
+   "tif": "data/raw/ofr2009_1072_dh/DH_USGS_backscatter1m.tif",
+   "nodata": [
+    255
+   ]
+  },
+  {
+   "name": "boston_harbor_noaa_sidescan_ofr2006_1008",
+   "tif": "data/raw/ofr2006_1008_bs/bh_1mBS.tif",
+   "nodata": [
+    255
+   ],
+   "unseen": true
+  },
+  {
+   "name": "vineyard_nantucket_composite_ofr2016_1119",
+   "tif": "data/raw/ofr2016_1119_vns/vns_bsmos_1m.tif",
+   "nodata": [
+    255
+   ]
+  }
+ ]
+}

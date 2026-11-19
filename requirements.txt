@@ -1,0 +1,9 @@
+torch>=2.2
+segmentation-models-pytorch>=0.5
+numpy
+opencv-python-headless
+rasterio
+geopandas
+pandas
+scikit-learn
+matplotlib
